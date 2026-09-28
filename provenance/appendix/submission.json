@@ -1,0 +1,23 @@
+{
+  "submitted_utc": "2026-09-27T20:04:43.630616+00:00",
+  "host": "unity",
+  "remote_directory": "/home/tan.1457/randomsketch/appendix-studies-20260927",
+  "seed": 2026092701,
+  "repetitions": 3000,
+  "jobs": {
+    "dense_benchmarks": "11183134",
+    "isotropic_benchmarks": "11183135"
+  },
+  "resources_per_job": {
+    "cpus": 6,
+    "memory": "16G",
+    "time_limit": "04:00:00",
+    "partition": "stat"
+  },
+  "status": "completed",
+  "source_archive": "source.tar.gz",
+  "collected_utc": "2026-09-27T20:13:33.550447+00:00",
+  "fits_successful": 81000,
+  "numerical_failures": 0,
+  "accounting": "logs/accounting.txt"
+}

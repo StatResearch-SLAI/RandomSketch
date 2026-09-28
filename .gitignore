@@ -1,0 +1,9 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+._*
+/runs/
+/logs/
+.mpl-cache/

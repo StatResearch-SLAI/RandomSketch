@@ -1,0 +1,8 @@
+# Runtime dependencies for all five studies and figure/table regeneration.
+# For the package versions recorded in the paper runs, use environment-paper.txt.
+numpy
+scipy
+pandas
+matplotlib
+joblib
+threadpoolctl

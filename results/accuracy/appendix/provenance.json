@@ -1,0 +1,13 @@
+{
+  "inputs": {
+    "summary.csv": "5c85afb154a599a3c83bdfa7928ceb83b90d33bb0469b0a488fd4551838aa280",
+    "paired_comparisons.csv": "c12ef40c6b9d8123501e7cc9c869a5d31132ddf7b0177210b5e6c2c682d0bcbb"
+  },
+  "source_sha256": "b0dfdd5ce207f9f16970f56a8dff3f2f7c9d21ed58d07eed818aae46716406cc",
+  "settings": 24,
+  "repetitions_per_setting": 3000,
+  "method_setting_rows_per_metric": 84,
+  "paired_corrected_comparisons": 60,
+  "operation": "Format existing summaries; no simulation rerun",
+  "paired_bold": "Pointwise 95% paired interval excludes zero before rounding"
+}

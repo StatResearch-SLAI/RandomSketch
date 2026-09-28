@@ -1,0 +1,137 @@
+{
+  "packaged_utc": "2026-09-28T15:10:26.566730+00:00",
+  "paper_title": "Prediction Risk After Observation Compression",
+  "paper_snapshot_date": "2026-09-28",
+  "source_repository": "https://github.com/jiayingweng/RandomSketch",
+  "source_repository_head": "4afa1ffc40c536323a9ab0a10c21cf0ac23d5ecd",
+  "manuscript_sha256": "4e12c5ce8580ae3c91ecbf38478322f94a58744d811329bed164820fdb435cc9",
+  "manuscript_includes_uncommitted_text_edits": true,
+  "destination_repository": "https://github.com/StatResearch-SLAI/RandomSketch",
+  "studies": [
+    "conditional",
+    "accuracy",
+    "threshold",
+    "dense_benchmarks",
+    "isotropic_benchmarks"
+  ],
+  "scope": "All simulations in Section 6 and Appendix A; Table 1 is theoretical.",
+  "reference_inputs": "Copied unchanged from completed paper run archives.",
+  "numerical_source_identical_to_manuscript_repository": {
+    "code/main_studies/accuracy.py": true,
+    "code/main_studies/common.py": true,
+    "code/main_studies/conditional.py": true,
+    "code/main_studies/dense_benchmarks.py": true,
+    "code/main_studies/isotropic_benchmarks.py": true,
+    "code/main_studies/make_appendix_tables.py": true,
+    "code/main_studies/render_figures.py": true,
+    "code/main_studies/threshold.py": true,
+    "code/utils.py": true
+  },
+  "artifact_generation": {
+    "command": "python reproduce.py render",
+    "operation": "Regenerated five PDF/PNG figures and five LaTeX tables from saved summaries.",
+    "new_monte_carlo_runs": false,
+    "comparisons": [
+      {
+        "path": "conditional/figures/complementary_calibration.pdf",
+        "reference_sha256": "72bb0d57d53cb0cb711e20770614a822bef979c2a3dc6cb7373df7099ccd25f5",
+        "regenerated_sha256": "d6556d74e319ee106353f0679841a093b0cb08f9df01072103f07e1258148bfd",
+        "byte_identical": false
+      },
+      {
+        "path": "conditional/figures/complementary_calibration.png",
+        "reference_sha256": "b3cfd62afc314b0a560c4901eaa1aab7e354ec8c6d0a8b7571ab9fd05339f8e6",
+        "regenerated_sha256": "b3cfd62afc314b0a560c4901eaa1aab7e354ec8c6d0a8b7571ab9fd05339f8e6",
+        "byte_identical": true
+      },
+      {
+        "path": "accuracy/figures/accuracy.pdf",
+        "reference_sha256": "1cf8d4f27a38b11f51b7640e4f0816b8af102f2c93548c01adac593053b1af72",
+        "regenerated_sha256": "db73232e797e3fc54b4839e3a9a49f14d75208973918db0b0886c0c1a9047e69",
+        "byte_identical": false
+      },
+      {
+        "path": "accuracy/figures/accuracy.png",
+        "reference_sha256": "dc295729630e56d47693b5db57f0e77f17e288d3915ff5da3dd4c4e43e7d5883",
+        "regenerated_sha256": "dc295729630e56d47693b5db57f0e77f17e288d3915ff5da3dd4c4e43e7d5883",
+        "byte_identical": true
+      },
+      {
+        "path": "threshold/figures/threshold.pdf",
+        "reference_sha256": "778e61c2522dc8327e3119e4fca2e4b2133d35d3613e73ca61a3c8ab84eb346e",
+        "regenerated_sha256": "08a6710018e7e1928094cff620c2f8da06a3accea3738da64545db5a53710f01",
+        "byte_identical": false
+      },
+      {
+        "path": "threshold/figures/threshold.png",
+        "reference_sha256": "b657ed6b6a4813548f7f585b3bf6e7d566fdf1356f73e1e86386849583a7020f",
+        "regenerated_sha256": "b657ed6b6a4813548f7f585b3bf6e7d566fdf1356f73e1e86386849583a7020f",
+        "byte_identical": true
+      },
+      {
+        "path": "dense_benchmarks/figures/dense_benchmarks.pdf",
+        "reference_sha256": "4a5fb13d2b806576a3c2ad3649b4522c9d5b78f6ebc158e519ac920accfd2006",
+        "regenerated_sha256": "6f84f64a165df818f321bcbfeb274bdf87addb75fe514ecd201762ccecd883ae",
+        "byte_identical": false
+      },
+      {
+        "path": "dense_benchmarks/figures/dense_benchmarks.png",
+        "reference_sha256": "b0a2d6c9ff9c0217b9c49276b797fe0fd5224d878aeb9934138053713e1e76a7",
+        "regenerated_sha256": "b0a2d6c9ff9c0217b9c49276b797fe0fd5224d878aeb9934138053713e1e76a7",
+        "byte_identical": true
+      },
+      {
+        "path": "isotropic_benchmarks/figures/isotropic_benchmarks.pdf",
+        "reference_sha256": "968bfbb235eaef42ff43d95792501cdc33a2025ebc0ce487e254440ffbc14880",
+        "regenerated_sha256": "e358e915702ddc8a8582c4bf3b15701324566721b90289d6322c14d143b05213",
+        "byte_identical": false
+      },
+      {
+        "path": "isotropic_benchmarks/figures/isotropic_benchmarks.png",
+        "reference_sha256": "4fffbb472c3a7c7c9b4c6e29756f8fe098d59aaa72a4fc6964d9ef79f7c43858",
+        "regenerated_sha256": "4fffbb472c3a7c7c9b4c6e29756f8fe098d59aaa72a4fc6964d9ef79f7c43858",
+        "byte_identical": true
+      },
+      {
+        "path": "accuracy/accuracy_table.tex",
+        "reference_sha256": "3ef2d01601da45ee83ad07c1d7fd87cab66abf778bafe5e48318558315ed4188",
+        "regenerated_sha256": "3ef2d01601da45ee83ad07c1d7fd87cab66abf778bafe5e48318558315ed4188",
+        "byte_identical": true
+      },
+      {
+        "path": "accuracy/appendix/bias_table.tex",
+        "reference_sha256": "fc17e3fe0210fc560248e82bd59b5d02acd330ca561c7cc72bbc358c4030029a",
+        "regenerated_sha256": "fc17e3fe0210fc560248e82bd59b5d02acd330ca561c7cc72bbc358c4030029a",
+        "byte_identical": true
+      },
+      {
+        "path": "accuracy/appendix/rmse_table.tex",
+        "reference_sha256": "edb76a7bb09569959cad22ea7feed381e7ff8c13990d06fb9156ef67d03fba57",
+        "regenerated_sha256": "edb76a7bb09569959cad22ea7feed381e7ff8c13990d06fb9156ef67d03fba57",
+        "byte_identical": true
+      },
+      {
+        "path": "accuracy/appendix/scaled_mae_table.tex",
+        "reference_sha256": "a147c8d271091ff28f03402129c90541798cd80fd34e94b3fa78ed575febce07",
+        "regenerated_sha256": "a147c8d271091ff28f03402129c90541798cd80fd34e94b3fa78ed575febce07",
+        "byte_identical": true
+      },
+      {
+        "path": "accuracy/appendix/paired_mae_table.tex",
+        "reference_sha256": "5c2aef40609a4c52cafd0d99b2a430eb51914a781487e85cdc42f4e52772f9d0",
+        "regenerated_sha256": "5c2aef40609a4c52cafd0d99b2a430eb51914a781487e85cdc42f4e52772f9d0",
+        "byte_identical": true
+      }
+    ],
+    "pdf_comparison_note": "PDF generation timestamps may change byte hashes.",
+    "render_environment": {
+      "python": "3.13.5",
+      "packages": {
+        "numpy": "2.1.3",
+        "scipy": "1.15.3",
+        "pandas": "2.2.3",
+        "matplotlib": "3.10.0"
+      }
+    }
+  }
+}
