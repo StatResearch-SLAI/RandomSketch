@@ -4,10 +4,10 @@ Code and completed simulation results for **Prediction Risk After Observation
 Compression**. This repository reproduces every simulation in Section 6 and
 Appendix A of the manuscript as of 28 September 2026.
 
-The five studies generate **five figures and five numerical tables**. All data
+The five studies generate **five figures and six numerical tables**. All data
 are simulated; no external dataset, manuscript checkout, or Lean installation
-is needed. The numerical study code is copied from the version that generated
-the paper's results and final figure layouts.
+is needed. The original numerical studies are accompanied by a postprocessor
+that compares a published risk estimate on the existing row-sampling fits.
 
 ## Quick start: rebuild the paper figures and tables
 
@@ -23,9 +23,10 @@ python -m pip install -r requirements.txt
 python reproduce.py render
 ```
 
-This reads the completed summaries in `results/` and writes all five figures
-as PDF and PNG files, the main accuracy table, and four appendix table
-fragments into `runs/rendered/`. It generates no new simulation draws and
+This reads the completed summaries in `results/` and the accuracy study's
+archived fits. It writes all five figures as PDF and PNG files, the main
+accuracy table, and five appendix table fragments into `runs/rendered/`.
+It generates no new simulation draws and
 leaves the reference results unchanged. Each rendered study records its
 input hashes, source hashes, and local plotting environment.
 
@@ -57,7 +58,7 @@ This generates the original linear-model data, fits the regressions, and
 writes new raw draws, summary statistics, diagnostics, figures, tables, and
 metadata under `runs/paper/`. It runs the five studies sequentially, with six
 workers within each study and one BLAS thread per worker. The command also
-generates the four additional accuracy tables. It does not simulate outcomes
+generates the five additional accuracy tables. It does not simulate outcomes
 from the scalar risk or chi-square laws.
 
 The runner fixes the paper's seeds, grids, and 3,000 repetitions. The
@@ -89,12 +90,19 @@ selected output root for a fresh run.
 | `accuracy` | Section 6.2, Figure 2, Table 2 | `accuracy/figures/accuracy.pdf`, `accuracy/accuracy_table.tex` | 24 settings; 72,000 fit evaluations |
 | `threshold` | Section 6.3, Figure 3 | `threshold/figures/threshold.pdf` | 30 settings; 90,000 fit evaluations |
 | `accuracy` | Appendix A.1, Tables 3--6 | `accuracy/appendix/{bias,rmse,scaled_mae,paired_mae}_table.tex` | Reuses the Section 6.2 results |
+| `accuracy` | Appendix A.1, Table 7 | `accuracy/published_comparator/mae_table.tex` | Reuses its 12 row-sampling settings; no additional fits |
 | `dense_benchmarks` | Appendix A.2, Figure 4 | `dense_benchmarks/figures/dense_benchmarks.pdf` | 9 settings; 27,000 fits |
 | `isotropic_benchmarks` | Appendix A.3, Figure 5 | `isotropic_benchmarks/figures/isotropic_benchmarks.pdf` | 18 settings; 54,000 fits |
 
 Table 1 summarizes the theoretical regimes and is not a simulation output.
 The [study protocol](docs/studies.md) gives the full parameter grids, sketch
 scalings, estimands, Monte Carlo interval formulas, and pairing rules.
+
+The added row-sampling comparison evaluates the full-data estimate of
+[Bellec et al., Section 3.1, Remark 2](https://pratikpatil.io/papers/cgcv.pdf),
+`||u||^2 / (n - 2d + d^2/m)`, on the 36,000 archived row-sampling fits.
+Its table and summary report MAE and paired corrected-minus-published
+differences. This comparator is not applied to the weighted Haar settings.
 
 The three main studies use seed **2026092601**; the two appendix studies use
 seed **2026092701**. All nonconditional studies use sample sizes 128, 256,
@@ -189,19 +197,31 @@ The `metadata.json` files and original submission records describe the
 historical runs; their paths refer to the original computation environment.
 `provenance/package.json` maps the bundled artifacts to those runs and records
 the manuscript snapshot used for the output inventory.
-`provenance/SHA256SUMS` records the bundled source and reference-result hashes.
-On Linux, those files can be checked from the repository root with
-`sha256sum --check provenance/SHA256SUMS`; on macOS, use
-`shasum -a 256 --check provenance/SHA256SUMS`.
+`provenance/SHA256SUMS` records the current bundled source, documentation,
+provenance, and reference-result hashes. On Linux, check these files from the
+repository root with `sha256sum --check provenance/SHA256SUMS`; on macOS, use
+`shasum -a 256 --check provenance/SHA256SUMS`. The original package and its
+checksums remain available at commit `a7bdabc`. The added comparator's
+`provenance.json` records its input
+raw-data hash, postprocessor hash, formula, and Monte Carlo calculation.
+The original source archives, raw draws, and historical run records are
+unchanged.
 
 The published runner and Slurm scripts use only this repository's files and
 the selected Python environment. They contain no author-specific compute
 paths. Original cluster scripts and paths are retained only within the
 historical source archives and run metadata.
 
-During packaging, `python reproduce.py render` regenerated all five PDF/PNG
-figures and all five table fragments. All five PNGs and all five table
-fragments matched the archived paper versions byte for byte. No new Monte
-Carlo simulations were run during packaging; the complete original runs and
-their numerical source are included. The comparison hashes and rendering
-environment are recorded in `provenance/package.json`.
+For the 28 September 2026 update, `python reproduce.py render` regenerated
+all five PDF/PNG figures and all six table fragments. All five PNGs, all six
+table fragments, and the published-comparator summary matched the current
+paper artifacts byte for byte. The updated accuracy and isotropic figures
+use distinct line styles and markers to distinguish overlapping curves.
+The comparison hashes and rendering environment are recorded in
+`provenance/package.json`.
+
+The published-comparator table is produced by postprocessing the archived
+accuracy fits. Its numerical source, summary, and provenance are included,
+and both `render` and `run` regenerate it. No new Monte Carlo simulations
+were needed for this update; the original raw draws and historical run
+records are unchanged.

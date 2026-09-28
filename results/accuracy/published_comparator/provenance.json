@@ -1,0 +1,22 @@
+{
+  "operation": "Evaluate published comparator on archived fits; no new simulation draws",
+  "input_sha256": {
+    "raw.csv.gz": "dc2db58a99dfb73bf4a9cc5a69a2521f21a7181d761d7d2c623d84b2cf152044"
+  },
+  "source_sha256": "e6bd1097fa006a22d38f44cdf71f7175cfc27861c32b0222078c3dfc7ddf4536",
+  "python": "3.14.2",
+  "packages": {
+    "numpy": "2.4.4",
+    "pandas": "3.0.5"
+  },
+  "settings": 12,
+  "repetitions_per_setting": 3000,
+  "fits": 36000,
+  "comparator": "Bellec et al. full-data estimate",
+  "reference": "https://pratikpatil.io/papers/cgcv.pdf, Section 3.1, Remark 2, equation (13)",
+  "formula": "n * raw / (n - 2*d + d*d/m), where raw = ||u||^2/n",
+  "scope": "Ordinary least squares with literal row subsampling only",
+  "difference": "Corrected absolute error minus published-comparator absolute error, paired within fit",
+  "interval": "Pointwise normal interval: difference +/- 1.96 * sample SD / sqrt(3000)",
+  "paired_bold": "Pointwise 95% paired interval excludes zero before rounding"
+}

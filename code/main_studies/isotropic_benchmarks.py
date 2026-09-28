@@ -189,19 +189,28 @@ def make_figure(summary, output):
     from matplotlib.lines import Line2D
     from matplotlib.ticker import NullLocator
 
+    # Family patterns remain visible between overlapping markers and curves.
+    family_styles = {
+        "row": dict(linestyle="-", marker="o", markersize=5.8, linewidth=1.5),
+        "haar": dict(linestyle=(0, (5, 2.5)), marker="s", markersize=4.8, linewidth=1.3),
+        "gaussian": dict(linestyle=(0, (1, 1.8)), marker="^", markersize=4.6, linewidth=1.3),
+    }
     fig, axes = plt.subplots(2, 2, figsize=(7.3, 6.5), sharex="col")
     for column, (gamma, rho) in enumerate(RATIOS):
         subset = summary[(summary.gamma == gamma) & (summary.rho == rho)]
         for family in FAMILIES:
             values = subset[(subset.family == family) & (subset.status == "ok")].sort_values("n")
-            for quantity, linestyle, marker in (("risk", "-", "o"),
-                                                 ("complementary", "--", "s")):
+            for quantity in ("risk", "complementary"):
+                style = dict(family_styles[family])
+                style["markerfacecolor"] = COLORS[family] if quantity == "risk" else "none"
+                if quantity == "complementary":
+                    style["markersize"] += 1.2
                 for row_index, metric in ((0, "_mean"), (1, "_limit_rmse")):
                     field = quantity+metric
                     axes[row_index, column].errorbar(
                         values.n, values[field], yerr=1.96*values[field+"_mcse"],
-                        color=COLORS[family], linestyle=linestyle, marker=marker,
-                        markersize=3.5, capsize=2, linewidth=1.1)
+                        color=COLORS[family], markeredgewidth=1.0,
+                        capsize=2, elinewidth=.8, **style)
         theory = subset[subset.family == "row"].sort_values("n")
         axes[0, column].plot(theory.n, theory.risk_mean_exact, color="black",
                              linestyle="-.", linewidth=1.2)
@@ -220,18 +229,20 @@ def make_figure(summary, output):
                     transform=ax.transAxes, fontsize=10)
     axes[0, 0].set_ylabel("Mean risk or risk estimate")
     axes[1, 0].set_ylabel("RMSE around limiting risk")
-    family_handles = [Line2D([], [], color=COLORS[family], linewidth=2,
-                             label=FAMILY_LABELS[family]) for family in FAMILIES]
-    quantity_handles = [Line2D([], [], color="black", linestyle="-", marker="o",
-                              markersize=4, label=r"Risk $R_{\min,\mathbf{S}}$"),
-                        Line2D([], [], color="black", linestyle="--", marker="s",
-                              markersize=4, label=r"Complementary $\widehat R_{\min,\mathbf{S}}$"),
+    family_handles = [Line2D([], [], color=COLORS[family], markerfacecolor="none",
+                             label=FAMILY_LABELS[family], **family_styles[family])
+                      for family in FAMILIES]
+    quantity_handles = [Line2D([], [], color="black", linestyle="none", marker="o",
+                              markersize=4.5, label=r"Risk $R_{\min,\mathbf{S}}$"),
+                        Line2D([], [], color="black", linestyle="none", marker="o",
+                              markerfacecolor="none", markersize=5.7,
+                              label=r"Complementary $\widehat R_{\min,\mathbf{S}}$"),
                         Line2D([], [], color="black", linestyle="-.", label="Exact mean"),
                         Line2D([], [], color="#999999", linestyle=":", label="Limiting risk")]
     fig.legend(handles=family_handles, loc="lower center", ncol=3, frameon=False,
-               bbox_to_anchor=(.52, .085), fontsize=9)
+               bbox_to_anchor=(.52, .085), fontsize=9, handlelength=3)
     fig.legend(handles=quantity_handles, loc="lower center", ncol=2, frameon=False,
-               bbox_to_anchor=(.52, -.002), fontsize=9, columnspacing=1.8)
+               bbox_to_anchor=(.52, -.002), fontsize=9, columnspacing=1.8, handlelength=3)
     fig.subplots_adjust(left=.12, right=.98, top=.86, bottom=.25, hspace=.50, wspace=.30)
     folder = Path(output)/"figures"
     folder.mkdir(parents=True, exist_ok=True)

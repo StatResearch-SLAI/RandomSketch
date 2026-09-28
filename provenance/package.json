@@ -3,9 +3,9 @@
   "paper_title": "Prediction Risk After Observation Compression",
   "paper_snapshot_date": "2026-09-28",
   "source_repository": "https://github.com/jiayingweng/RandomSketch",
-  "source_repository_head": "4afa1ffc40c536323a9ab0a10c21cf0ac23d5ecd",
-  "manuscript_sha256": "4e12c5ce8580ae3c91ecbf38478322f94a58744d811329bed164820fdb435cc9",
-  "manuscript_includes_uncommitted_text_edits": true,
+  "source_repository_head": "a91cb36f31c5c5333332051091c077171d3dd2bb",
+  "manuscript_sha256": "70a9ff5ef03cf56890e88fbcff283a8a32623097fa52127223858c0dee11f975",
+  "manuscript_includes_uncommitted_text_edits": false,
   "destination_repository": "https://github.com/StatResearch-SLAI/RandomSketch",
   "studies": [
     "conditional",
@@ -14,84 +14,26 @@
     "dense_benchmarks",
     "isotropic_benchmarks"
   ],
-  "scope": "All simulations in Section 6 and Appendix A; Table 1 is theoretical.",
-  "reference_inputs": "Copied unchanged from completed paper run archives.",
+  "scope": "All simulations in Section 6 and Appendix A: five figures and six numerical tables; Table 1 is theoretical.",
+  "reference_inputs": "Original raw draws and summaries copied unchanged from completed paper run archives; current figures and published-comparator outputs match the source repository.",
   "numerical_source_identical_to_manuscript_repository": {
+    "code/utils.py": true,
     "code/main_studies/accuracy.py": true,
     "code/main_studies/common.py": true,
     "code/main_studies/conditional.py": true,
     "code/main_studies/dense_benchmarks.py": true,
     "code/main_studies/isotropic_benchmarks.py": true,
     "code/main_studies/make_appendix_tables.py": true,
+    "code/main_studies/make_published_comparator.py": true,
     "code/main_studies/render_figures.py": true,
-    "code/main_studies/threshold.py": true,
-    "code/utils.py": true
+    "code/main_studies/threshold.py": true
   },
   "artifact_generation": {
-    "command": "python reproduce.py render",
-    "operation": "Regenerated five PDF/PNG figures and five LaTeX tables from saved summaries.",
+    "verified_utc": "2026-09-28T18:18:32.769667+00:00",
+    "command": "python reproduce.py render --output-root runs/verification-20260928-sync",
+    "operation": "Regenerated five PDF/PNG figures, six LaTeX tables, and the published-comparator summary from saved summaries and archived accuracy fits.",
     "new_monte_carlo_runs": false,
     "comparisons": [
-      {
-        "path": "conditional/figures/complementary_calibration.pdf",
-        "reference_sha256": "72bb0d57d53cb0cb711e20770614a822bef979c2a3dc6cb7373df7099ccd25f5",
-        "regenerated_sha256": "d6556d74e319ee106353f0679841a093b0cb08f9df01072103f07e1258148bfd",
-        "byte_identical": false
-      },
-      {
-        "path": "conditional/figures/complementary_calibration.png",
-        "reference_sha256": "b3cfd62afc314b0a560c4901eaa1aab7e354ec8c6d0a8b7571ab9fd05339f8e6",
-        "regenerated_sha256": "b3cfd62afc314b0a560c4901eaa1aab7e354ec8c6d0a8b7571ab9fd05339f8e6",
-        "byte_identical": true
-      },
-      {
-        "path": "accuracy/figures/accuracy.pdf",
-        "reference_sha256": "1cf8d4f27a38b11f51b7640e4f0816b8af102f2c93548c01adac593053b1af72",
-        "regenerated_sha256": "db73232e797e3fc54b4839e3a9a49f14d75208973918db0b0886c0c1a9047e69",
-        "byte_identical": false
-      },
-      {
-        "path": "accuracy/figures/accuracy.png",
-        "reference_sha256": "dc295729630e56d47693b5db57f0e77f17e288d3915ff5da3dd4c4e43e7d5883",
-        "regenerated_sha256": "dc295729630e56d47693b5db57f0e77f17e288d3915ff5da3dd4c4e43e7d5883",
-        "byte_identical": true
-      },
-      {
-        "path": "threshold/figures/threshold.pdf",
-        "reference_sha256": "778e61c2522dc8327e3119e4fca2e4b2133d35d3613e73ca61a3c8ab84eb346e",
-        "regenerated_sha256": "08a6710018e7e1928094cff620c2f8da06a3accea3738da64545db5a53710f01",
-        "byte_identical": false
-      },
-      {
-        "path": "threshold/figures/threshold.png",
-        "reference_sha256": "b657ed6b6a4813548f7f585b3bf6e7d566fdf1356f73e1e86386849583a7020f",
-        "regenerated_sha256": "b657ed6b6a4813548f7f585b3bf6e7d566fdf1356f73e1e86386849583a7020f",
-        "byte_identical": true
-      },
-      {
-        "path": "dense_benchmarks/figures/dense_benchmarks.pdf",
-        "reference_sha256": "4a5fb13d2b806576a3c2ad3649b4522c9d5b78f6ebc158e519ac920accfd2006",
-        "regenerated_sha256": "6f84f64a165df818f321bcbfeb274bdf87addb75fe514ecd201762ccecd883ae",
-        "byte_identical": false
-      },
-      {
-        "path": "dense_benchmarks/figures/dense_benchmarks.png",
-        "reference_sha256": "b0a2d6c9ff9c0217b9c49276b797fe0fd5224d878aeb9934138053713e1e76a7",
-        "regenerated_sha256": "b0a2d6c9ff9c0217b9c49276b797fe0fd5224d878aeb9934138053713e1e76a7",
-        "byte_identical": true
-      },
-      {
-        "path": "isotropic_benchmarks/figures/isotropic_benchmarks.pdf",
-        "reference_sha256": "968bfbb235eaef42ff43d95792501cdc33a2025ebc0ce487e254440ffbc14880",
-        "regenerated_sha256": "e358e915702ddc8a8582c4bf3b15701324566721b90289d6322c14d143b05213",
-        "byte_identical": false
-      },
-      {
-        "path": "isotropic_benchmarks/figures/isotropic_benchmarks.png",
-        "reference_sha256": "4fffbb472c3a7c7c9b4c6e29756f8fe098d59aaa72a4fc6964d9ef79f7c43858",
-        "regenerated_sha256": "4fffbb472c3a7c7c9b4c6e29756f8fe098d59aaa72a4fc6964d9ef79f7c43858",
-        "byte_identical": true
-      },
       {
         "path": "accuracy/accuracy_table.tex",
         "reference_sha256": "3ef2d01601da45ee83ad07c1d7fd87cab66abf778bafe5e48318558315ed4188",
@@ -102,6 +44,12 @@
         "path": "accuracy/appendix/bias_table.tex",
         "reference_sha256": "fc17e3fe0210fc560248e82bd59b5d02acd330ca561c7cc72bbc358c4030029a",
         "regenerated_sha256": "fc17e3fe0210fc560248e82bd59b5d02acd330ca561c7cc72bbc358c4030029a",
+        "byte_identical": true
+      },
+      {
+        "path": "accuracy/appendix/paired_mae_table.tex",
+        "reference_sha256": "5c2aef40609a4c52cafd0d99b2a430eb51914a781487e85cdc42f4e52772f9d0",
+        "regenerated_sha256": "5c2aef40609a4c52cafd0d99b2a430eb51914a781487e85cdc42f4e52772f9d0",
         "byte_identical": true
       },
       {
@@ -117,13 +65,84 @@
         "byte_identical": true
       },
       {
-        "path": "accuracy/appendix/paired_mae_table.tex",
-        "reference_sha256": "5c2aef40609a4c52cafd0d99b2a430eb51914a781487e85cdc42f4e52772f9d0",
-        "regenerated_sha256": "5c2aef40609a4c52cafd0d99b2a430eb51914a781487e85cdc42f4e52772f9d0",
+        "path": "accuracy/figures/accuracy.pdf",
+        "reference_sha256": "1f277e2277c0d1457a626a739410ada3c61897d63a014b8e25f073c18871e9b8",
+        "regenerated_sha256": "f3c5f36e382c9b898a908f11731392cd15934a791cf44567b64d11fabf47c271",
+        "byte_identical": false,
+        "identical_except_generation_timestamps": true
+      },
+      {
+        "path": "accuracy/figures/accuracy.png",
+        "reference_sha256": "7523fa54e975a3ddd62f15d3822c3501b422b0da8b853d1f70d0a4d6092c42d6",
+        "regenerated_sha256": "7523fa54e975a3ddd62f15d3822c3501b422b0da8b853d1f70d0a4d6092c42d6",
+        "byte_identical": true
+      },
+      {
+        "path": "accuracy/published_comparator/mae_table.tex",
+        "reference_sha256": "b5ad840137b6638307efe5a686dd1ffb214b447d10d0cba616058ba5727a6a52",
+        "regenerated_sha256": "b5ad840137b6638307efe5a686dd1ffb214b447d10d0cba616058ba5727a6a52",
+        "byte_identical": true
+      },
+      {
+        "path": "accuracy/published_comparator/summary.csv",
+        "reference_sha256": "81fd94510d6d699ab703f56b49f427ccdb4cd3fddeed1d2d993dbc1c6dd8b5e3",
+        "regenerated_sha256": "81fd94510d6d699ab703f56b49f427ccdb4cd3fddeed1d2d993dbc1c6dd8b5e3",
+        "byte_identical": true
+      },
+      {
+        "path": "conditional/figures/complementary_calibration.pdf",
+        "reference_sha256": "72bb0d57d53cb0cb711e20770614a822bef979c2a3dc6cb7373df7099ccd25f5",
+        "regenerated_sha256": "adf3700306a50aef20ca6cb685e86e56911ed51526a887fc9d770c63ad01e0bb",
+        "byte_identical": false,
+        "identical_except_generation_timestamps": true
+      },
+      {
+        "path": "conditional/figures/complementary_calibration.png",
+        "reference_sha256": "b3cfd62afc314b0a560c4901eaa1aab7e354ec8c6d0a8b7571ab9fd05339f8e6",
+        "regenerated_sha256": "b3cfd62afc314b0a560c4901eaa1aab7e354ec8c6d0a8b7571ab9fd05339f8e6",
+        "byte_identical": true
+      },
+      {
+        "path": "dense_benchmarks/figures/dense_benchmarks.pdf",
+        "reference_sha256": "4a5fb13d2b806576a3c2ad3649b4522c9d5b78f6ebc158e519ac920accfd2006",
+        "regenerated_sha256": "31faa2bce09ee4ae60e9e020f7ef4afa6734bcbe3536b581151d5f4b5f9795c0",
+        "byte_identical": false,
+        "identical_except_generation_timestamps": true
+      },
+      {
+        "path": "dense_benchmarks/figures/dense_benchmarks.png",
+        "reference_sha256": "b0a2d6c9ff9c0217b9c49276b797fe0fd5224d878aeb9934138053713e1e76a7",
+        "regenerated_sha256": "b0a2d6c9ff9c0217b9c49276b797fe0fd5224d878aeb9934138053713e1e76a7",
+        "byte_identical": true
+      },
+      {
+        "path": "isotropic_benchmarks/figures/isotropic_benchmarks.pdf",
+        "reference_sha256": "46189697ed81f6f51a349bc5d48d5ebd4eba5c381483c4ddde6ea8f1198ac241",
+        "regenerated_sha256": "88eb1c5774f7354dc7d3d9f053a08c82c387609481b0553b04b86e89d8f32dab",
+        "byte_identical": false,
+        "identical_except_generation_timestamps": true
+      },
+      {
+        "path": "isotropic_benchmarks/figures/isotropic_benchmarks.png",
+        "reference_sha256": "833240c851ff395945462b3c3932d1029935a9636e067ce5c0ca56760e3cc1e5",
+        "regenerated_sha256": "833240c851ff395945462b3c3932d1029935a9636e067ce5c0ca56760e3cc1e5",
+        "byte_identical": true
+      },
+      {
+        "path": "threshold/figures/threshold.pdf",
+        "reference_sha256": "778e61c2522dc8327e3119e4fca2e4b2133d35d3613e73ca61a3c8ab84eb346e",
+        "regenerated_sha256": "4eb59f189804bc3871265197f9b5ec56b0cd13d8023fce52b4cd936bd8741554",
+        "byte_identical": false,
+        "identical_except_generation_timestamps": true
+      },
+      {
+        "path": "threshold/figures/threshold.png",
+        "reference_sha256": "b657ed6b6a4813548f7f585b3bf6e7d566fdf1356f73e1e86386849583a7020f",
+        "regenerated_sha256": "b657ed6b6a4813548f7f585b3bf6e7d566fdf1356f73e1e86386849583a7020f",
         "byte_identical": true
       }
     ],
-    "pdf_comparison_note": "PDF generation timestamps may change byte hashes.",
+    "pdf_comparison_note": "All five PDFs are byte-identical after removing CreationDate and ModDate metadata.",
     "render_environment": {
       "python": "3.13.5",
       "packages": {
@@ -132,6 +151,45 @@
         "pandas": "2.2.3",
         "matplotlib": "3.10.0"
       }
+    },
+    "source_sha256": {
+      "reproduce.py": "aa9575dbea22948d1bd99ea2a326d09ca8ecc5202764d5a70fab43d6e5b18020",
+      "code/utils.py": "58c608f608c25e364b3ef04fa1a5941c66d132478d29fa5f78e1e9f3b66e1171",
+      "code/main_studies/accuracy.py": "a8867b93beb31b253e0b5fdc340cecbd1293ba0f10f87594f9f53db2c74780bf",
+      "code/main_studies/common.py": "b5e1018cf18977db8da84599a839eccdad64e14e83c0bed1e5954840e5204489",
+      "code/main_studies/conditional.py": "87cce9da9ec2139d4c76d2765217ea599d48b58512a7f8e730e21d6abb23ee5d",
+      "code/main_studies/dense_benchmarks.py": "7bce43f66074a254d47185f111d03b0599cd6d98f554e91c3cb15be8ad2b6c35",
+      "code/main_studies/isotropic_benchmarks.py": "879b4ba08030a8ea798bb5f80e80d67f13ee78d077eedd0c39252c492b90f988",
+      "code/main_studies/make_appendix_tables.py": "b0dfdd5ce207f9f16970f56a8dff3f2f7c9d21ed58d07eed818aae46716406cc",
+      "code/main_studies/make_published_comparator.py": "e6bd1097fa006a22d38f44cdf71f7175cfc27861c32b0222078c3dfc7ddf4536",
+      "code/main_studies/render_figures.py": "31c735509b9df0ac6891381e323fef982d7aebb13e11bcb099348a862acd3e7b",
+      "code/main_studies/threshold.py": "e4a2a797f6f582d9f9294cd023ac3be25fd23f30f94c880598ff4f8f206bfad5"
+    },
+    "input_sha256": {
+      "conditional": {
+        "settings.csv": "856644e4fd5c361a8d16b1ca2c93475d51f9afd7cf8e8239dd517c7d4cb3979f",
+        "metadata.json": "e0184da7f19c63ff5f76b77d64ecf68f2d42f9735884e5ea872df229fa7313a4"
+      },
+      "accuracy": {
+        "summary.csv": "5c85afb154a599a3c83bdfa7928ceb83b90d33bb0469b0a488fd4551838aa280",
+        "metadata.json": "ea5fa9a9d1aed6dc1feaab386d699648116ea81111f06a572cafeacbccff8d78",
+        "paired_comparisons.csv": "c12ef40c6b9d8123501e7cc9c869a5d31132ddf7b0177210b5e6c2c682d0bcbb",
+        "raw.csv.gz": "dc2db58a99dfb73bf4a9cc5a69a2521f21a7181d761d7d2c623d84b2cf152044"
+      },
+      "threshold": {
+        "summary.csv": "3fd084d5c8e4bb26bb2ced0c14d23dfe777efbaad4d5d81878d7c32d2efceceb",
+        "metadata.json": "da82413976459d0b1d46ebb3fa0930244d455db674669e10e96667147131d630"
+      },
+      "dense_benchmarks": {
+        "summary.csv": "4b16e53daea505901d2ff25785799316671fcf2c0c4773367b043b625404cdf3",
+        "metadata.json": "8260b9a8cc040421148a667c444330676ee6425c04c691ecab8803a776062a4c"
+      },
+      "isotropic_benchmarks": {
+        "summary.csv": "31d3a5c4754c5c4b6b31aa970a657731515be13ea010b6ae89049207fe185a4e",
+        "metadata.json": "4a4dd03d7ee0ec1e2d38799f00c6377d31063fccecb77dc69b4ef81f327d31a5"
+      }
     }
-  }
+  },
+  "updated_utc": "2026-09-28T18:18:32.730293+00:00",
+  "original_archive_commit": "a7bdabc81d82eaa9b191cb2be7ef628943e120a1"
 }

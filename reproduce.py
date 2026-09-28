@@ -148,6 +148,8 @@ def run_studies(args, env):
             if name == "accuracy":
                 subprocess.run([sys.executable, str(SOURCE / "make_appendix_tables.py"),
                                 "--report", str(destination)], cwd=ROOT, env=env, check=True)
+                subprocess.run([sys.executable, str(SOURCE / "make_published_comparator.py"),
+                                "--report", str(destination)], cwd=ROOT, env=env, check=True)
         except (OSError, ValueError, KeyError, subprocess.CalledProcessError) as error:
             record.update(status="failed", error=str(error))
             raise
@@ -186,9 +188,16 @@ def render_studies(args, env):
             module.write_table(frames[name], destination)
             subprocess.run([sys.executable, str(SOURCE / "make_appendix_tables.py"),
                             "--report", str(destination)], cwd=ROOT, env=env, check=True)
+            raw_source = inputs / name / "raw.csv.gz"
+            input_hashes["raw.csv.gz"] = digest(raw_source)
+            subprocess.run([sys.executable, str(SOURCE / "make_published_comparator.py"),
+                            "--report", str(inputs / name),
+                            "--output", str(destination / "published_comparator")],
+                           cwd=ROOT, env=env, check=True)
         save_json(destination / "render_manifest.json", {
             "created_utc": datetime.now(timezone.utc).isoformat(),
-            "operation": "Render saved summaries; no new simulation draws",
+            "operation": "Render saved summaries and derive the row-sampling comparator from archived fits; no new simulation draws"
+                         if name == "accuracy" else "Render saved summaries; no new simulation draws",
             "input_directory": str(inputs / name), "input_sha256": input_hashes,
             "source_sha256": source_hashes(), "python": platform.python_version(),
             "packages": {package: importlib.metadata.version(package)
@@ -204,7 +213,7 @@ def main():
     run.add_argument("--study", choices=["all", *STUDIES], default="all")
     run.add_argument("--output-root", type=Path, default=ROOT / "runs" / "paper")
     run.add_argument("--jobs", type=int, default=1)
-    render = subparsers.add_parser("render", help="Rebuild all figures/tables from completed summaries")
+    render = subparsers.add_parser("render", help="Rebuild figures/tables from completed summaries and archived accuracy fits")
     render.add_argument("--study", choices=["all", *STUDIES], default="all")
     render.add_argument("--input-root", type=Path, default=ROOT / "results")
     render.add_argument("--output-root", type=Path, default=ROOT / "runs" / "rendered")

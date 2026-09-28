@@ -103,6 +103,25 @@ standard errors in parentheses; bold paired differences have intervals
 excluding zero before rounding. The main table uses \(n=512\); the four
 appendix tables cover all 24 settings.
 
+A fifth appendix table compares the corrected estimate with the full-data
+estimate in [Bellec et al., Section 3.1, Remark 2, equation (13)](https://pratikpatil.io/papers/cgcv.pdf).
+For ordinary least squares on a row subsample, it is
+
+\[
+\frac{\|u\|^2}{n-2d+d^2/m}.
+\]
+
+[`make_published_comparator.py`](../code/main_studies/make_published_comparator.py)
+evaluates this formula using the saved full-residual mean square `raw` and
+the exact fitted-model risk from each archived fit. It uses only the 12
+row-sampling settings (36,000 fits) and adds no random draws. The table gives
+each method's MAE and the paired corrected-minus-published MAE difference,
+with the same Monte Carlo standard-error and pointwise 95% interval rules.
+All 12 intervals favor the published estimate in these settings; this is
+an empirical comparison on this grid, not a general ordering of estimators.
+The two ratio pairs satisfy the asymptotic tight-frame MSE equality; that
+identity neither implies equal MAE nor applies to the weighted Haar sketch.
+
 ## 3. Tight-frame MSE threshold
 
 Script: [`threshold.py`](../code/main_studies/threshold.py).
@@ -209,9 +228,11 @@ relative to the chosen results directory.
 | Table 4: RMSE | `make_appendix_tables.py` | `accuracy/appendix/rmse_table.tex` |
 | Table 5: scaled MAE | `make_appendix_tables.py` | `accuracy/appendix/scaled_mae_table.tex` |
 | Table 6: paired MAE differences | `make_appendix_tables.py` | `accuracy/appendix/paired_mae_table.tex` |
+| Table 7: published row-sampling comparator | `make_published_comparator.py` | `accuracy/published_comparator/mae_table.tex` |
 | Figure 4 | `dense_benchmarks.py` | `dense_benchmarks/figures/dense_benchmarks.pdf` |
 | Figure 5 | `isotropic_benchmarks.py` | `isotropic_benchmarks/figures/isotropic_benchmarks.pdf` |
 
 Table 1 summarizes theoretical regimes and has no simulation generator.
-The appendix accuracy tables reuse the accuracy summaries and require
-the paper's full 3,000 repetitions; they introduce no additional draws.
+The four original appendix accuracy tables reuse the accuracy summaries;
+the published-comparator table reuses the archived raw row-sampling fits.
+All require the paper's full 3,000 repetitions and introduce no additional draws.

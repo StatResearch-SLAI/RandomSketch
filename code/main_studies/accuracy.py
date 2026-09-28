@@ -149,6 +149,14 @@ def make_figure(summary, out):
     import matplotlib.pyplot as plt
     from matplotlib.ticker import FixedLocator, FuncFormatter, NullLocator
 
+    # Preserve both corrected curves when their MAEs nearly coincide.
+    styles = {
+        "corrected": dict(linestyle="-", markersize=4.2, linewidth=1.6),
+        "population_sensitivity_corrected": dict(
+            linestyle=(0, (5, 3)), markersize=5.8, linewidth=1.3,
+            markerfacecolor="none", markeredgewidth=1.1),
+        "gcv": dict(linestyle="-.", markersize=4.5, linewidth=1.25),
+    }
     rows = [(noise, sketch) for noise in NOISES for sketch in SKETCHES]
     fig, axes = plt.subplots(4, 2, figsize=(7.0, 7.2), sharex=True, sharey="col")
     for row, (noise, sketch) in enumerate(rows):
@@ -160,7 +168,8 @@ def make_figure(summary, out):
                 values = subset[subset.method == method].sort_values("n")
                 ax.errorbar(values.n, values.mae, yerr=1.96 * values.mae_mcse,
                             color=COLORS[method], marker=MARKERS[method],
-                            label=LABELS[method], markersize=4, capsize=2, linewidth=1.25)
+                            label=LABELS[method], capsize=2, elinewidth=.8,
+                            **styles[method])
             ax.set(xscale="log", yscale="log", xticks=SAMPLE_SIZES)
             ax.set_xticklabels([str(n) for n in SAMPLE_SIZES], fontsize=10)
             ax.xaxis.set_minor_locator(NullLocator())
@@ -192,7 +201,7 @@ def make_figure(summary, out):
     handles, labels = axes[0, 0].get_legend_handles_labels()
     fig.legend(handles, labels, loc="lower center", ncol=2, fontsize=10,
                bbox_to_anchor=(0.53, 0.01), frameon=False,
-               columnspacing=1.6, handletextpad=0.5)
+               columnspacing=1.6, handletextpad=0.5, handlelength=2.7)
     fig.subplots_adjust(left=0.12, right=0.99, top=0.90, bottom=0.18,
                         wspace=0.30, hspace=0.62)
     folder = Path(out) / "figures"

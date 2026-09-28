@@ -1,0 +1,29 @@
+\begingroup
+\begin{tabular}{@{}rlrrr@{}}
+\toprule
+$n$ & Errors & \shortstack{Corrected\\estimate} & \shortstack{Bellec et al.\\full-data estimate} & \shortstack{Paired MAE\\difference} \\
+\midrule
+\multicolumn{5}{c}{$(d/n,m/n)=(0.25,0.50)$} \\
+\midrule
+128 & Gaussian & 0.289 (0.004) & 0.252 (0.004) & $\mathbf{0.0373}$ (0.0034) \\
+ & Rademacher & 0.276 (0.004) & 0.225 (0.003) & $\mathbf{0.0508}$ (0.0031) \\
+\addlinespace[3pt]
+256 & Gaussian & 0.200 (0.003) & 0.175 (0.002) & $\mathbf{0.0246}$ (0.0023) \\
+ & Rademacher & 0.186 (0.003) & 0.156 (0.002) & $\mathbf{0.0307}$ (0.0022) \\
+\addlinespace[3pt]
+512 & Gaussian & 0.144 (0.002) & 0.126 (0.002) & $\mathbf{0.0180}$ (0.0017) \\
+ & Rademacher & 0.132 (0.002) & 0.108 (0.002) & $\mathbf{0.0241}$ (0.0015) \\
+\midrule
+\multicolumn{5}{c}{$(d/n,m/n)=(0.50,0.75)$} \\
+\midrule
+128 & Gaussian & 0.620 (0.009) & 0.504 (0.007) & $\mathbf{0.1153}$ (0.0091) \\
+ & Rademacher & 0.602 (0.009) & 0.471 (0.007) & $\mathbf{0.1314}$ (0.0087) \\
+\addlinespace[3pt]
+256 & Gaussian & 0.419 (0.006) & 0.347 (0.005) & $\mathbf{0.0720}$ (0.0063) \\
+ & Rademacher & 0.424 (0.006) & 0.329 (0.005) & $\mathbf{0.0942}$ (0.0063) \\
+\addlinespace[3pt]
+512 & Gaussian & 0.304 (0.004) & 0.250 (0.003) & $\mathbf{0.0542}$ (0.0044) \\
+ & Rademacher & 0.294 (0.004) & 0.232 (0.003) & $\mathbf{0.0621}$ (0.0042) \\
+\bottomrule
+\end{tabular}
+\endgroup
