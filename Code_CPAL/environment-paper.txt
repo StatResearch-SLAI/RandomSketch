@@ -1,0 +1,13 @@
+# Recorded environment of all five completed Unity paper jobs.
+# Python: 3.13.13, Anaconda distribution, built with GCC 14.3.0.
+# Python itself is recorded here, not installed by this pip requirements file.
+# Sources: results/{conditional,accuracy,threshold,dense_benchmarks,
+# isotropic_benchmarks}/metadata.json, fields python and packages.
+# Original Slurm jobs: 11174000, 11174001, 11174002, 11183134, 11183135.
+# These are the recorded package versions, not a complete transitive lockfile.
+numpy==2.5.3
+scipy==1.18.1
+pandas==3.0.5
+matplotlib==3.11.2
+joblib==1.6.0
+threadpoolctl==3.6.0

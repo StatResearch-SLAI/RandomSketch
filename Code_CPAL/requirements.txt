@@ -1,0 +1,8 @@
+# Runtime dependencies for manuscript simulation studies and rendering.
+# Recorded versions are in environment-paper.txt and environment-risk-curves.txt.
+numpy
+scipy
+pandas
+matplotlib
+joblib
+threadpoolctl
