@@ -277,7 +277,8 @@ def fit_and_evaluate(data, sketch, compute_r1=True, diagnostics=True):
 
     calibration_seconds includes the sketch-weighted residual and b_A needed
     by R_obs (stored in the legacy ``r2`` field). r1_seconds is the additional
-    population-sensitivity trace computation for R_sens (stored as ``r1``).
+    population-covariance trace computation for the unobservable risk estimate
+    (stored in the legacy ``R_sens``/``r1`` fields).
     Diagnostics (when requested) include SVD time in fit_seconds.
     """
     n, d = data.X.shape

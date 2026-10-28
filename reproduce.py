@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the published simulations or rebuild their figures and tables."""
+"""Run the current manuscript studies or rebuild their figures and tables."""
 import argparse
 from datetime import datetime, timezone
 import hashlib
@@ -17,40 +17,33 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parent
 SOURCE = ROOT / "code" / "main_studies"
-REPETITIONS = 3000
 STUDIES = {
     "conditional": {
-        "seed": 2026092601, "input": "settings.csv", "rows": 6,
-        "figure": "complementary_calibration", "extra": ["--summaries", "20"],
-        "counts": {"settings": 6, "frozen_summaries": 120,
-                   "complementary_draws": 360000, "successful_draws": 360000,
+        "seed": 2026092601, "reps": 1000, "input": "settings.csv", "rows": 6,
+        "figure": "complementary_calibration", "extra": ["--summaries", "100"],
+        "counts": {"settings": 6, "frozen_summaries": 600,
+                   "complementary_draws": 600000, "successful_draws": 600000,
                    "failed_draws": 0},
     },
-    "accuracy": {
-        "seed": 2026092601, "input": "summary.csv", "rows": 84,
-        "figure": "accuracy", "extra": [],
-        "counts": {"settings": 24, "fits_attempted": 72000,
-                   "fits_successful": 72000, "numerical_failures": 0},
+    "risk_curves": {
+        "seed": 2026100901, "reps": 1000, "extra": [],
     },
     "threshold": {
-        "seed": 2026092601, "input": "summary.csv", "rows": 30,
+        "seed": 2026092601, "reps": 1000, "input": "summary.csv", "rows": 45,
         "figure": "threshold", "extra": [],
-        "counts": {"settings": 30, "attempted_fits": 90000,
-                   "completed_fits": 90000, "failed_fits": 0},
+        "counts": {"settings": 45, "independent_datasets": 9000,
+                   "attempted_fits": 45000, "completed_fits": 45000,
+                   "failed_fits": 0},
     },
-    "dense_benchmarks": {
-        "seed": 2026092701, "input": "summary.csv", "rows": 9,
-        "figure": "dense_benchmarks", "extra": [],
-        "counts": {"settings": 9, "fits_attempted": 27000,
-                   "fits_successful": 27000, "numerical_failures": 0},
-    },
-    "isotropic_benchmarks": {
-        "seed": 2026092701, "input": "summary.csv", "rows": 18,
-        "figure": "isotropic_benchmarks", "extra": [],
-        "counts": {"settings": 18, "attempted_fits": 54000,
-                   "completed_fits": 54000, "failed_fits": 0},
+    "threshold_shapes": {
+        "seed": 2026092601, "reps": 1000, "input": "summary.csv", "rows": 90,
+        "figure": "threshold_shapes", "extra": [],
+        "counts": {"settings": 90, "independent_datasets": 9000,
+                   "attempted_fits": 90000, "completed_fits": 90000,
+                   "failed_fits": 0},
     },
 }
+CURRENT_STUDIES = ("conditional", "risk_curves", "threshold", "threshold_shapes")
 
 
 def digest(path):
@@ -66,13 +59,13 @@ def save_json(path, value):
 
 
 def source_hashes():
-    paths = [ROOT / "reproduce.py", ROOT / "code" / "utils.py"]
+    paths = [ROOT / "reproduce.py", ROOT / "validate_conditional.py", ROOT / "code" / "utils.py"]
     paths.extend(sorted(SOURCE.glob("*.py")))
     return {str(path.relative_to(ROOT)): digest(path) for path in paths}
 
 
 def selected(name):
-    return list(STUDIES) if name == "all" else [name]
+    return list(CURRENT_STUDIES) if name == "all" else [name]
 
 
 def require_fresh(paths):
@@ -86,12 +79,19 @@ def check_completed(name, folder):
     import pandas as pd
 
     spec = STUDIES[name]
+    if name == "risk_curves":
+        sys.path.insert(0, str(SOURCE))
+        checked = importlib.import_module("risk_curves").validate_raw(folder, require_paper=True)
+        if checked["specification"]["seed"] != spec["seed"]:
+            raise ValueError("risk_curves: results do not use the manuscript seed")
+        return checked
     metadata = json.loads((folder / "metadata.json").read_text())
     arguments, counts = metadata["arguments"], metadata["counts"]
-    if arguments.get("reps") != REPETITIONS or arguments.get("seed") != spec["seed"]:
+    expected_reps = spec["reps"]
+    if arguments.get("reps") != expected_reps or arguments.get("seed") != spec["seed"]:
         raise ValueError(f"{name}: results do not use the published seed and repetitions")
-    if name == "conditional" and arguments.get("summaries") != 20:
-        raise ValueError("conditional: the paper requires 20 frozen fits per setting")
+    if name == "conditional" and arguments.get("summaries") != 100:
+        raise ValueError("conditional: the paper requires 100 frozen fits per setting")
     for key, expected in spec["counts"].items():
         if counts.get(key) != expected:
             raise ValueError(f"{name}: {key}={counts.get(key)!r}, expected {expected}")
@@ -104,12 +104,22 @@ def check_completed(name, folder):
         raise ValueError(f"{name}: summary includes failed settings")
     if "complete" in frame and not frame["complete"].eq(True).all():
         raise ValueError(f"{name}: summary includes incomplete settings")
-    if "count" in frame and not frame["count"].eq(REPETITIONS).all():
+    if "count" in frame and not frame["count"].eq(expected_reps).all():
         raise ValueError(f"{name}: summary has an incomplete repetition count")
-    if name == "accuracy":
-        paired = pd.read_csv(folder / "paired_comparisons.csv")
-        if len(paired) != 108 or not paired["count"].eq(REPETITIONS).all():
-            raise ValueError("accuracy: incomplete paired comparisons")
+    if name == "conditional":
+        expected_grid = {(300, 150, d, family) for d in (100, 300, 500)
+                         for family in ("row", "gaussian")}
+        observed_grid = set(frame[["n", "m", "d", "family"]].itertuples(index=False, name=None))
+        if observed_grid != expected_grid or not frame.complete_summaries.eq(100).all():
+            raise ValueError("conditional: incorrect grid or frozen-fit count")
+        if not frame.attempted_draws.eq(100000).all():
+            raise ValueError("conditional: incorrect complementary-data draw count")
+        sys.path.insert(0, str(ROOT))
+        importlib.import_module("validate_conditional").validate_report(folder, paper=True)
+    if name in ("threshold", "threshold_shapes"):
+        sys.path.insert(0, str(SOURCE))
+        checked = importlib.import_module(name).validate_raw(folder, require_paper=True)
+        return checked["summary"]
     return frame
 
 
@@ -133,23 +143,23 @@ def run_studies(args, env):
         spec = STUDIES[name]
         destination = output / name
         destination.mkdir(parents=True, exist_ok=True)
-        command = [sys.executable, str(SOURCE / f"{name}.py"),
-                   "--output", str(destination), "--reps", str(REPETITIONS),
+        repetitions = spec["reps"]
+        command = [sys.executable, str(SOURCE / f"{name}.py")]
+        if name == "risk_curves":
+            command.append("run")
+        command += ["--output", str(destination), "--reps", str(repetitions),
                    "--seed", str(spec["seed"]), "--jobs", str(args.jobs), *spec["extra"]]
         record = {"started_utc": datetime.now(timezone.utc).isoformat(),
                   "study": name, "command": command, "status": "running",
                   "source_sha256": source_hashes()}
         manifest = destination / "reproduction_run.json"
-        save_json(manifest, record)
-        print(f"Running {name}: {REPETITIONS:,} repetitions; {args.jobs} workers", flush=True)
+        # Resumable studies require an initially empty directory.
+        if name not in ("risk_curves", "threshold_shapes"):
+            save_json(manifest, record)
+        print(f"Running {name}: {repetitions:,} repetitions; {args.jobs} workers", flush=True)
         try:
             subprocess.run(command, cwd=ROOT, env=env, check=True)
             check_completed(name, destination)
-            if name == "accuracy":
-                subprocess.run([sys.executable, str(SOURCE / "make_appendix_tables.py"),
-                                "--report", str(destination)], cwd=ROOT, env=env, check=True)
-                subprocess.run([sys.executable, str(SOURCE / "make_published_comparator.py"),
-                                "--report", str(destination)], cwd=ROOT, env=env, check=True)
         except (OSError, ValueError, KeyError, subprocess.CalledProcessError) as error:
             record.update(status="failed", error=str(error))
             raise
@@ -174,9 +184,24 @@ def render_studies(args, env):
         spec = STUDIES[name]
         destination = output / name
         destination.mkdir(parents=True, exist_ok=True)
+        if name == "risk_curves":
+            source = inputs / name
+            shutil.copytree(source / "cells", destination / "cells")
+            shutil.copy2(source / "manifest.json", destination / "manifest.json")
+            subprocess.run([sys.executable, str(SOURCE / "risk_curves.py"),
+                            "render", "--output", str(destination)],
+                           cwd=ROOT, env=env, check=True)
+            save_json(destination / "render_manifest.json", {
+                "created_utc": datetime.now(timezone.utc).isoformat(),
+                "operation": "Validate complete raw cells and recompute summaries, figures and tables; no new draws",
+                "input_directory": str(source),
+                "input_sha256": {str(Path(path).relative_to(source)): digest(path)
+                                 for path in frames[name]["cell_csvs"]},
+                "source_sha256": source_hashes(),
+            })
+            print(f"Rendered {name}: {destination}", flush=True)
+            continue
         files = [spec["input"], "metadata.json"]
-        if name == "accuracy":
-            files.append("paired_comparisons.csv")
         input_hashes = {}
         for filename in files:
             source = inputs / name / filename
@@ -184,20 +209,9 @@ def render_studies(args, env):
             input_hashes[filename] = digest(source)
         module = importlib.import_module(name)
         module.make_figure(frames[name], destination)
-        if name == "accuracy":
-            module.write_table(frames[name], destination)
-            subprocess.run([sys.executable, str(SOURCE / "make_appendix_tables.py"),
-                            "--report", str(destination)], cwd=ROOT, env=env, check=True)
-            raw_source = inputs / name / "raw.csv.gz"
-            input_hashes["raw.csv.gz"] = digest(raw_source)
-            subprocess.run([sys.executable, str(SOURCE / "make_published_comparator.py"),
-                            "--report", str(inputs / name),
-                            "--output", str(destination / "published_comparator")],
-                           cwd=ROOT, env=env, check=True)
         save_json(destination / "render_manifest.json", {
             "created_utc": datetime.now(timezone.utc).isoformat(),
-            "operation": "Render saved summaries and derive the row-sampling comparator from archived fits; no new simulation draws"
-                         if name == "accuracy" else "Render saved summaries; no new simulation draws",
+            "operation": "Render saved summaries; no new simulation draws",
             "input_directory": str(inputs / name), "input_sha256": input_hashes,
             "source_sha256": source_hashes(), "python": platform.python_version(),
             "packages": {package: importlib.metadata.version(package)
@@ -209,13 +223,14 @@ def render_studies(args, env):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
-    run = subparsers.add_parser("run", help="Generate the original data and rerun the paper studies")
+    run = subparsers.add_parser("run", help="Generate original data for the four current manuscript studies")
     run.add_argument("--study", choices=["all", *STUDIES], default="all")
     run.add_argument("--output-root", type=Path, default=ROOT / "runs" / "paper")
     run.add_argument("--jobs", type=int, default=1)
-    render = subparsers.add_parser("render", help="Rebuild figures/tables from completed summaries and archived accuracy fits")
+    render = subparsers.add_parser("render", help="Rebuild figures/tables; risk_curves summaries are recomputed from raw fits")
     render.add_argument("--study", choices=["all", *STUDIES], default="all")
-    render.add_argument("--input-root", type=Path, default=ROOT / "results")
+    render.add_argument("--input-root", type=Path, default=ROOT / "runs" / "paper",
+                        help="Completed simulation root (default: runs/paper)")
     render.add_argument("--output-root", type=Path, default=ROOT / "runs" / "rendered")
     args = parser.parse_args()
     if args.command == "run" and args.jobs < 1:

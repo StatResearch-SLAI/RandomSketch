@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
 from pathlib import Path
 import time
 
@@ -29,6 +30,10 @@ except ImportError:
 
 
 STUDY = "complementary_calibration"
+N, M = 300, 150
+DIMENSIONS = (100, 300, 500)
+CONDITIONAL_REPS = 1000
+DEFAULT_SUMMARIES = 100
 FAMILIES = ("row", "gaussian")
 FAMILY_LABELS = {"row": "Row", "gaussian": "Dense Gaussian"}
 COLORS = {"row": "#777777", "gaussian": "#0072B2"}
@@ -41,10 +46,10 @@ AUDITS = ("orthogonality_error", "summary_error", "refit_error",
 
 def settings_catalog():
     """The six prespecified settings, unchanged by CLI repetition controls."""
-    return [dict(setting_id=f"d{d:03d}-{family}", n=256, m=128, d=d,
-                 family=family, complement_df=128,
-                 regime="d < m" if d < 128 else "d > m")
-            for d in (64, 192, 320) for family in FAMILIES]
+    return [dict(setting_id=f"d{d:03d}-{family}", n=N, m=M, d=d,
+                 family=family, complement_df=N-M,
+                 regime="d < m" if d < M else "d > m")
+            for d in DIMENSIONS for family in FAMILIES]
 
 
 def freeze_summary(setting, seed, summary_index):
@@ -55,7 +60,7 @@ def freeze_summary(setting, seed, summary_index):
     For d<m, the factor S Q' is retained in the least-squares objective.
     """
     n, m, d = (setting[key] for key in ("n", "m", "d"))
-    key = (STUDY, setting["setting_id"], summary_index)
+    key = (STUDY, "n300-m150-v1", n, m, d, setting["family"], summary_index)
     sigma, chol, beta = population(d)
     sketch = make_sketch(n, m, setting["family"],
                          seed_rng(seed, *key, "sketch"))
@@ -142,7 +147,10 @@ def one_summary(item):
             artifact_keys = ("S", "Q", "Q_perp", "X_row", "eps_row", "y_row",
                              "compressed_x", "compressed_y", "Sigma", "beta",
                              "beta_hat", "row_residual", "risk")
-            np.savez_compressed(artifact, **{key: frozen[key] for key in artifact_keys})
+            temporary_artifact = frozen_dir / f".{summary_id}.tmp.npz"
+            np.savez_compressed(temporary_artifact,
+                                **{key: frozen[key] for key in artifact_keys})
+            temporary_artifact.replace(artifact)
             artifact_hash = hashlib.sha256(artifact.read_bytes()).hexdigest()
             risk, df = frozen["risk"], setting["complement_df"]
             diagnostics.update(
@@ -189,6 +197,21 @@ def one_summary(item):
         # An incomplete cluster is never silently used for reported inference.
         records.extend(dict(base, rep=rep, status="failed", error=message)
                        for rep in range(len(records), reps))
+    # Retain each completed (or failed) fit before final aggregation. An
+    # interrupted run preserves these checkpoints; reruns use a fresh output
+    # directory and the same keyed draws, never selectively replace failures.
+    checkpoint_dir = Path(output) / "checkpoints"
+    checkpoint_dir.mkdir(parents=True, exist_ok=True)
+    checkpoint = checkpoint_dir / f"{summary_id}.csv.gz"
+    temporary = checkpoint_dir / f".{summary_id}.tmp.csv.gz"
+    pd.DataFrame(records).to_csv(temporary, index=False, compression="gzip")
+    temporary.replace(checkpoint)
+    diagnostics.update(checkpoint_file=str(checkpoint.relative_to(output)),
+                       checkpoint_sha256=hashlib.sha256(checkpoint.read_bytes()).hexdigest())
+    diagnostic_path = checkpoint_dir / f"{summary_id}.json"
+    temporary_diagnostic = checkpoint_dir / f".{summary_id}.tmp.json"
+    temporary_diagnostic.write_text(json.dumps(diagnostics, indent=2) + "\n")
+    temporary_diagnostic.replace(diagnostic_path)
     return records, diagnostics
 
 
@@ -218,7 +241,7 @@ def summarize_frozen(frame, diagnostics):
 
 
 def summarize_settings(frozen_summary):
-    """Student t intervals across independent frozen summaries (default df=19)."""
+    """Student t intervals across independent frozen summaries (default df=99)."""
     rows = []
     for key, group in frozen_summary.groupby(SETTING_KEYS, sort=True):
         row = dict(zip(SETTING_KEYS, key))
@@ -247,10 +270,10 @@ def make_figure(settings, output):
     import matplotlib.pyplot as plt
 
     fig, axes = plt.subplots(1, 3, figsize=(7.3, 2.8))
-    panels = (("mean_ratio", "(a) Mean / risk", 1.),
-              ("variance_ratio", "(b) Variance / exact", 1.),
-              ("coverage", "(c) Interval coverage", .95))
-    dimensions = (64, 192, 320)
+    panels = (("mean_ratio", r"(a) Mean of $\widehat R_c/R$", 1.),
+              ("variance_ratio", r"(b) Sample variance / $(2/q)$", 1.),
+              ("coverage", "(c) 95% risk interval coverage", .95))
+    dimensions = DIMENSIONS
     for ax, (metric, title, target) in zip(axes, panels):
         for family_index, family in enumerate(FAMILIES):
             group = settings[settings.family == family].sort_values("d")
@@ -266,8 +289,7 @@ def make_figure(settings, output):
             ax.errorbar(x, values, yerr=np.vstack((values-lo, hi-values)),
                         fmt=MARKERS[family], color=COLORS[family], capsize=3,
                         markersize=5, linewidth=1.2, label=FAMILY_LABELS[family])
-        ax.axhline(target, color="black", linestyle=":", linewidth=1.4,
-                   label="Exact benchmark")
+        ax.axhline(target, color="black", linestyle=":", linewidth=1.4)
         ax.set_title(title, fontsize=10)
         ax.set_xticks(np.arange(len(dimensions)), [str(d) for d in dimensions])
         ax.set_xlabel(r"$d$")
@@ -280,9 +302,10 @@ def make_figure(settings, output):
             ax.set_ylim(target-half, target+half)
         ax.grid(axis="y", alpha=.2)
     handles, labels = axes[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="lower center", ncol=3, fontsize=9,
-               frameon=False, bbox_to_anchor=(0.5, 0.005))
-    fig.tight_layout(rect=(0, 0.13, 1, 1), w_pad=1.2)
+    axes[0].legend(handles, labels, loc="upper left", fontsize=8,
+                   framealpha=.97, borderpad=.4, handlelength=1.5,
+                   handletextpad=.4, labelspacing=.35)
+    fig.tight_layout(w_pad=1.2)
     figures = Path(output) / "figures"
     figures.mkdir(parents=True, exist_ok=True)
     for extension in ("pdf", "png"):
@@ -295,7 +318,7 @@ def write_report(frame, frozen_summary, settings, diagnostics, args):
     complete = bool(settings.complete.all())
     lines = ["# Complementary risk estimate: conditional calibration", "",
              f'**Status: {"complete" if complete else "incomplete; see retained failure records"}.**', "",
-             f"Six settings use n=256, m=128, d in {{64,192,320}}, and row or raw dense Gaussian sketches. "
+             f"Six settings use n={N}, m={M}, d in {DIMENSIONS}, and row or raw dense Gaussian sketches. "
              f"Each setting has {args.summaries} independent frozen fitted summaries and "
              f"{args.reps:,} complementary-data draws per summary. "
              f"The run retains {len(frame):,} planned draws, including {total_failures:,} failures.", "",
@@ -342,15 +365,16 @@ def write_report(frame, frozen_summary, settings, diagnostics, args):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--reps", type=int, default=DEFAULT_REPS)
-    parser.add_argument("--summaries", type=int, default=20)
+    parser.add_argument("--reps", type=int, default=CONDITIONAL_REPS)
+    parser.add_argument("--summaries", type=int, default=DEFAULT_SUMMARIES)
     parser.add_argument("--seed", type=int, default=DEFAULT_SEED)
     parser.add_argument("--jobs", type=int, default=1)
     args = parser.parse_args()
     if args.reps < 3 or args.summaries < 2 or args.jobs < 1:
         parser.error("Require at least 3 draws, 2 summaries, and 1 worker")
     args.output.mkdir(parents=True, exist_ok=True)
-    if (args.output / "metadata.json").exists() or (args.output / "raw.csv.gz").exists():
+    if any((args.output / name).exists() for name in
+           ("metadata.json", "raw.csv.gz", "frozen", "checkpoints")):
         parser.error("Output already contains a run; choose a fresh directory")
     start = time.perf_counter()
     catalog = settings_catalog()
@@ -376,7 +400,10 @@ def main():
                        reconstruction_audit_refits=int((diagnostics.status == "ok").sum()),
                        conditioning="S, QX, Qepsilon; fresh Gaussian complementary design and noise",
                        uncertainty="Pointwise Student-t intervals across frozen summaries",
-                       catalog=catalog), time.perf_counter()-start)
+                       catalog=catalog), time.perf_counter()-start,
+                  seed_scheme="SHA256 keyed streams: (complementary_calibration, n300-m150-v1, "
+                              "n, m, d, family, fit index), with separate sketch, row-space-data "
+                              "and complement-data batch phases")
     if not settings.complete.all():
         raise SystemExit("Incomplete simulation: all failures retained; inspect failures.csv")
 

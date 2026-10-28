@@ -11,12 +11,6 @@ The simulation studies use simulated data and require no external dataset
 or LaTeX installation. The expanded Section 5.2 study uses actual original-data fits and
 plots mean risks, including the exact risk of each fitted predictor.
 
-This standalone code repository contains the current reproduction sources.
-Completed-run paths beginning with `reports/` refer to the manuscript
-checkout and are not included here. In a fresh clone, generate results with
-`run` before using `render`. The root `results/` archive contains older
-studies with different grids; it is separate from the current bundle.
-
 ## Install
 
 Use Python 3.9 or newer. From the directory containing `Code_CPAL`:
@@ -36,7 +30,7 @@ Section 5.2 run, tested with Python 3.13.5. Its run manifest also records the
 BLAS implementation and operating system.
 The current Section 5.3 rerun uses the same local package versions. Both
 run metadata files record the environment and BLAS implementation in
-`reports/mse-1000-20261012/results/` at the manuscript checkout root.
+`reports/mse-1000-20261012/results/` at the repository root.
 
 ## Reproduce all simulations
 
@@ -83,7 +77,7 @@ as described below.
 
 The completed manuscript runs had no numerical failures, replacement draws,
 or trimming. Their retained outputs are at the following paths, relative
-to the manuscript checkout root:
+to the repository root:
 
 | Study | Completed work | Local archive |
 |---|---|---|
@@ -156,8 +150,7 @@ To regenerate current Figures 1–6 and Tables 1–3 from the completed
 archives, without rerunning the simulations, use the current renderer.
 The saved archives have different directory layouts; temporary aliases
 provide the `<input-root>/<study>` layout expected by `reproduce.py`.
-From the manuscript checkout root, with the referenced `reports/` archives
-available, run:
+From the repository root, run:
 
 ```bash
 render_workspace="$(mktemp -d /tmp/randomsketch-current-render.XXXXXX)"
@@ -215,7 +208,7 @@ Mean-risk agreement concerns average calibration; auxiliary paired bias,
 MAE, MSE, and RMSE columns describe individual-fit estimation error.
 
 The completed study retains its original generating snapshot in
-`reports/expanded-risk-20261009/source/risk_curves.py` at the manuscript checkout root.
+`reports/expanded-risk-20261009/source/risk_curves.py` at the repository root.
 The current renderer uses the common `R_B` notation; the presentation update
 preserves all saved numerical results. Archived computations require their
 frozen source snapshot for the strict source-hash resume check.
@@ -275,7 +268,7 @@ exact MSE curve and crossover formulas are used only in the row figure;
 they are not applied to weighted Haar or raw dense Gaussian sketches.
 The current row and extension runs are archived at
 `reports/mse-1000-20261012/results/threshold/` and
-`reports/mse-1000-20261012/results/threshold_shapes/` at the manuscript checkout root.
+`reports/mse-1000-20261012/results/threshold_shapes/` at the repository root.
 They were freshly generated from original data, using 1,000 repetitions in
 every setting.
 
@@ -323,4 +316,4 @@ preserve seed assignments across worker counts; floating-point results may
 differ slightly across package versions and BLAS implementations.
 
 Historical studies and their frozen generating sources are retained separately
-and indexed in [repository README](../readme.md#historical-archive).
+and indexed in [reports/README.md](../reports/README.md).

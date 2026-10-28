@@ -1,5 +1,5 @@
-# Runtime dependencies for all five studies and figure/table regeneration.
-# For the package versions recorded in the paper runs, use environment-paper.txt.
+# Runtime dependencies for manuscript simulation studies and rendering.
+# Recorded versions are in environment-paper.txt and environment-risk-curves.txt.
 numpy
 scipy
 pandas

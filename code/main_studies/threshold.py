@@ -3,11 +3,15 @@
 
 Every replicate generates X and y and fits the sketched regression. The
 chi-square representations used in the proofs are not simulation inputs.
-The five sketch sizes within a replicate share data and a row permutation;
-the central setting also shares its streams with the accuracy study.
+The five sketch sizes within a replicate share data and a row permutation.
 """
 
 import argparse
+from fractions import Fraction
+from functools import lru_cache
+import hashlib
+import json
+from math import floor
 from pathlib import Path
 import time
 
@@ -17,7 +21,6 @@ from scipy.optimize import brentq
 from scipy.stats import norm
 
 from common import (
-    DEFAULT_REPS,
     DEFAULT_SEED,
     NumericalFailure,
     fit_and_evaluate,
@@ -29,8 +32,9 @@ from common import (
 )
 
 
-SAMPLE_SIZES = (128, 256, 512)
-GAMMAS = (0.25, 0.50)
+MSE_REPS = 1000
+SAMPLE_SIZES = (100, 300, 500)
+GAMMAS = (0.30, 0.50, 0.70)
 OFFSETS = (-0.08, -0.04, 0.0, 0.04, 0.08)
 
 
@@ -38,10 +42,12 @@ def asymptotic_threshold(gamma):
     return 3.0 * gamma / (1.0 + 2.0 * gamma)
 
 
+@lru_cache(maxsize=32)
 def sketch_sizes(n, d):
-    """Five integer sketch dimensions centered at the limiting threshold."""
-    rho_star = asymptotic_threshold(d / n)
-    sizes = tuple(round(n * (rho_star + offset)) for offset in OFFSETS)
+    """Nearest integer sketch sizes; exact half-integer ties round upward."""
+    rho_star = Fraction(3 * d, n + 2 * d)
+    sizes = tuple(floor(n * (rho_star + Fraction(str(offset))) + Fraction(1, 2))
+                  for offset in OFFSETS)
     if len(set(sizes)) != len(OFFSETS):
         raise ValueError(f"Rounding gives duplicate sketch sizes: {sizes}")
     if any(not d + 3 < m < n for m in sizes):
@@ -101,8 +107,8 @@ def _base_record(n, d, m, rep, seed):
         "fit_id": f"{seed}:n{n}:d{d}:rep{rep}:gaussian:row:m{m}",
         "covariance": "AR(1), correlation 0.5", "sigma2": 1.0,
         "prediction_signal": 4.0,
-        "central_setting_shared_with_accuracy":
-            m == round(n * asymptotic_threshold(d / n)),
+        "nominal_offset": OFFSETS[sketch_sizes(n, d).index(m)],
+        "central_setting": m == sketch_sizes(n, d)[len(OFFSETS) // 2],
         "status": "numerical_failure", "failure_type": "", "failure_message": "",
         "risk": np.nan,
         "complementary": np.nan, "corrected": np.nan,
@@ -210,13 +216,83 @@ def summarize(raw, repetitions):
     return pd.DataFrame(rows)
 
 
+def validate_raw(output, require_paper=True):
+    """Check the exact grid, replicate identities, failures, and saved hashes."""
+    output = Path(output)
+    metadata = json.loads((output / "metadata.json").read_text())
+    args = metadata["arguments"]
+    reps, seed = int(args["reps"]), int(args["seed"])
+    if require_paper and (reps != MSE_REPS or seed != DEFAULT_SEED):
+        raise ValueError("The threshold paper run requires 1000 reps and seed 2026092601")
+    if reps < 2 or metadata.get("study") != "threshold":
+        raise ValueError("Invalid threshold archive")
+    if set(metadata["artifact_sha256"]) != {"raw.csv.gz", "summary.csv"}:
+        raise ValueError("Threshold archive requires both raw and summary hashes")
+    for name, expected_hash in metadata["artifact_sha256"].items():
+        if hashlib.sha256((output / name).read_bytes()).hexdigest() != expected_hash:
+            raise ValueError(f"Altered threshold artifact: {name}")
+    raw = pd.read_csv(output / "raw.csv.gz", float_precision="round_trip")
+    expected = {(n, round(n * gamma), m) for n in SAMPLE_SIZES for gamma in GAMMAS
+                for m in sketch_sizes(n, round(n * gamma))}
+    if set(raw.groupby(["n", "d", "m"]).groups) != expected:
+        raise ValueError("Threshold archive does not match the exact requested grid")
+    if len(raw) != len(expected) * reps or raw.fit_id.duplicated().any():
+        raise ValueError("Incorrect threshold fit count or duplicate fit identity")
+    for (n, d, m), group in raw.groupby(["n", "d", "m"], sort=True):
+        if len(group) != reps or set(group.rep) != set(range(reps)):
+            raise ValueError(f"Incomplete repetition IDs at {(n, d, m)}")
+        for key, value in {"seed": seed, "status": "ok", "noise": "gaussian",
+                           "sketch": "row", "gamma": d / n, "rho": m / n}.items():
+            if not group[key].eq(value).all():
+                raise ValueError(f"Invalid threshold field {key} at {(n, d, m)}")
+        expected_ids = [f"{seed}:n{n}:d{d}:rep{rep}:gaussian:row:m{m}" for rep in group.rep]
+        if list(group.fit_id) != expected_ids:
+            raise ValueError("Incorrect fit identities")
+        for key in ("design_draw_id", "data_draw_id", "sketch_draw_id", "row_order_id",
+                    "nominal_offset", "central_setting"):
+            expected_values = [_base_record(n, d, m, rep, seed)[key] for rep in group.rep]
+            if list(group[key]) != expected_values:
+                raise ValueError(f"Incorrect threshold identity field: {key}")
+    numeric = raw[["risk", "complementary", "corrected", "complementary_error",
+                   "corrected_error", "complementary_squared_error", "corrected_squared_error"]]
+    if not np.isfinite(numeric.to_numpy()).all():
+        raise ValueError("Nonfinite threshold result")
+    if (raw[["risk", "complementary", "corrected"]] < 0).any().any():
+        raise ValueError("Negative threshold risk or criterion")
+    for method in ("complementary", "corrected"):
+        error = raw[method].to_numpy() - raw.risk.to_numpy()
+        if (not np.allclose(error, raw[method + "_error"], rtol=1e-12, atol=1e-12)
+                or not np.allclose(error**2, raw[method + "_squared_error"], rtol=1e-12, atol=1e-12)):
+            raise ValueError("Threshold paired error does not match its fitted risk")
+    summary = pd.read_csv(output / "summary.csv", float_precision="round_trip")
+    if set(zip(summary.n, summary.d, summary.m)) != expected or len(summary) != len(expected):
+        raise ValueError("Incorrect threshold summary grid")
+    fresh = summarize(raw, reps)
+    if list(summary.columns) != list(fresh.columns):
+        raise ValueError("Incorrect threshold summary schema")
+    for key in summary:
+        if pd.api.types.is_numeric_dtype(fresh[key]):
+            if not np.allclose(summary[key], fresh[key], rtol=1e-13, atol=1e-13):
+                raise ValueError(f"Threshold summary differs from raw fits: {key}")
+        elif not summary[key].eq(fresh[key]).all():
+            raise ValueError(f"Threshold summary differs from raw fits: {key}")
+    counts = metadata["counts"]
+    for key, value in {"settings": len(expected), "independent_datasets": 9 * reps,
+                       "attempted_fits": len(raw), "completed_fits": len(raw),
+                       "failed_fits": 0, "repetitions_per_setting": reps,
+                       "complete_for_reporting": True}.items():
+        if counts.get(key) != value:
+            raise ValueError(f"Incorrect threshold metadata count: {key}")
+    return {"counts": counts, "summary": summary}
+
+
 def make_figure(summary, output):
     setup_plotting()
     import matplotlib.pyplot as plt
 
     folder = Path(output) / "figures"
     folder.mkdir(parents=True, exist_ok=True)
-    fig, axes = plt.subplots(2, 3, figsize=(7.3, 4.9), sharey=True)
+    fig, axes = plt.subplots(3, 3, figsize=(7.5, 7.1), sharey=True)
     for row_i, gamma in enumerate(GAMMAS):
         for col_i, n in enumerate(SAMPLE_SIZES):
             ax = axes[row_i, col_i]
@@ -240,24 +316,27 @@ def make_figure(summary, output):
                        label=r"$\rho_*(\gamma)$")
             ax.axvline(continuous_crossover(n, d), color="#D55E00",
                        linestyle=":", linewidth=1.8,
-                       label=r"$\rho_n^{\mathrm{exact}}$")
+                       label=r"$\rho_n^{\#}$")
             ax.axhline(1, color="#777777", linestyle="-.", linewidth=0.8)
-            ax.set_title(fr"$\gamma={gamma:.2f}$, $n={n}$", fontsize=10)
-            ax.set_xlabel(r"$\rho=m/n$")
+            ax.set_title(fr"$d/n={gamma:.2f}$, $n={n}$", fontsize=10)
+            ax.set_xlabel(r"$m/n$")
             ax.set_xlim(xlo, xhi)
             ax.grid(alpha=0.2)
             if col_i == 0:
-                ax.set_ylabel(r"$\mathrm{MSE}(\widehat R_{\mathrm{obs}}) / "
-                              r"\mathrm{MSE}(\widehat R_{\perp,\mathbf{S}})$", fontsize=9)
+                ax.set_ylabel(r"$\mathrm{MSE}(\widehat R_o) / "
+                              r"\mathrm{MSE}(\widehat R_c)$", fontsize=9)
     handles, labels = axes[0, 0].get_legend_handles_labels()
     # Matplotlib orders the errorbar container after the line artists.
     order = [labels.index(label) for label in
              ("Data simulation", "Exact ratio", r"$\rho_*(\gamma)$",
-              r"$\rho_n^{\mathrm{exact}}$")]
-    fig.legend([handles[i] for i in order], [labels[i] for i in order],
-               loc="lower center", ncol=4, frameon=False,
-               bbox_to_anchor=(0.5, 0.005))
-    fig.tight_layout(rect=(0, 0.07, 1, 1))
+              r"$\rho_n^{\#}$")]
+    legend_labels = ["Data simulation", "Exact ratio", r"$\rho_*(\gamma)$",
+                     r"$\rho_n^{\#}$"]
+    axes[0, 0].legend([handles[i] for i in order], legend_labels,
+                      loc="upper left", fontsize=7, framealpha=.97,
+                      borderpad=.25, borderaxespad=.2,
+                      handlelength=1., handletextpad=.25, labelspacing=.35)
+    fig.tight_layout()
     fig.savefig(folder / "threshold.pdf")
     fig.savefig(folder / "threshold.png", dpi=220)
     plt.close(fig)
@@ -266,7 +345,7 @@ def make_figure(summary, output):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--reps", type=int, default=DEFAULT_REPS)
+    parser.add_argument("--reps", type=int, default=MSE_REPS)
     parser.add_argument("--seed", type=int, default=DEFAULT_SEED)
     parser.add_argument("--jobs", type=int, default=1)
     args = parser.parse_args()
@@ -284,9 +363,9 @@ def main():
     nested_records = run_parallel(simulate_replicate, items, args.jobs)
     raw = pd.DataFrame([record for records in nested_records for record in records])
     raw = raw.sort_values(["n", "d", "m", "rep"]).reset_index(drop=True)
-    raw.to_csv(args.output / "raw.csv.gz", index=False)
+    raw.to_csv(args.output / "raw.csv.gz", index=False, float_format="%.17g")
     summary = summarize(raw, args.reps)
-    summary.to_csv(args.output / "summary.csv", index=False)
+    summary.to_csv(args.output / "summary.csv", index=False, float_format="%.17g")
     failed = int(raw["status"].ne("ok").sum())
     counts = {
         "settings": len(SAMPLE_SIZES) * len(GAMMAS) * len(OFFSETS),
@@ -295,15 +374,23 @@ def main():
         "completed_fits": int(len(raw) - failed),
         "failed_fits": failed,
         "repetitions_per_setting": args.reps,
-        "central_fits_shared_with_accuracy":
-            len(SAMPLE_SIZES) * len(GAMMAS) * args.reps,
+        "complete_for_reporting": failed == 0,
         "pairing": "Five m values share each dataset and nested row permutation.",
         "ratio_interval": "Pointwise 95% paired log-delta interval.",
         "scope": "Data simulation assesses ordering; it does not resolve the O(1/n) threshold shift.",
     }
-    save_metadata(args.output, "threshold", args, counts, time.perf_counter() - start)
+    metadata = save_metadata(args.output, "threshold", args, counts,
+                             time.perf_counter() - start,
+                             seed_scheme="SHA256 keyed independent feature and Gaussian-error streams; five nested row subsets per dataset")
+    metadata["grid"] = {"sample_sizes": SAMPLE_SIZES, "d_over_n": GAMMAS,
+                        "nominal_offsets": OFFSETS,
+                        "rounding": "Nearest integer; exact half-integer ties round upward"}
+    metadata["artifact_sha256"] = {name: hashlib.sha256((args.output / name).read_bytes()).hexdigest()
+                                   for name in ("raw.csv.gz", "summary.csv")}
+    (args.output / "metadata.json").write_text(json.dumps(metadata, indent=2, default=str) + "\n")
     if failed:
         raise RuntimeError(f"Preserved {failed} failed fits in raw.csv.gz; no draws were replaced")
+    validate_raw(args.output, require_paper=(args.reps == MSE_REPS and args.seed == DEFAULT_SEED))
     make_figure(summary, args.output)
     print(summary.to_string(index=False), flush=True)
     print(f"Saved {len(raw)} fits from {len(items)} datasets to {args.output}", flush=True)

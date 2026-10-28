@@ -1,8 +1,0 @@
-JobID                       JobName      State ExitCode    Elapsed     MaxRSS      NCPUS 
------------- ---------------------- ---------- -------- ---------- ---------- ---------- 
-11183134             appendix-dense  COMPLETED      0:0   00:02:20                     6 
-11183134.ba+                  batch  COMPLETED      0:0   00:02:20    382500K          6 
-11183134.ex+                 extern  COMPLETED      0:0   00:02:20                     6 
-11183135         appendix-isotropic  COMPLETED      0:0   00:04:25                     6 
-11183135.ba+                  batch  COMPLETED      0:0   00:04:25    275268K          6 
-11183135.ex+                 extern  COMPLETED      0:0   00:04:25                     6 
