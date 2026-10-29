@@ -1,4 +1,4 @@
-# Simulation code for *Prediction Risk After Observation Compression*
+# *Prediction Risk After Observation Compression*
 
 This code reproduces the simulations in Section 5 and Appendix A, including
 Figures 1–6 and Tables 1–3. All data are simulated; no external dataset or
