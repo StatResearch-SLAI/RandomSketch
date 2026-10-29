@@ -118,33 +118,31 @@ python validate_conditional.py --report runs/paper/conditional --paper
 This checks the saved models, raw records, checkpoints, and summaries,
 and replays part of the data generation.
 
-## Use saved results from the manuscript repository
+## Reproduce all simulation outputs from this folder
 
-The full manuscript repository keeps completed results in `reports/`,
-alongside the current repo named `Code_CPAL/`. Its `reports/README.md` indexes current and historical
-runs. These archives are separate from the standalone code download.
-
-<details>
-<summary>Rebuild all current figures and tables from the manuscript archives</summary>
-
-From the manuscript root (the directory containing `main.tex`), run:
+After installing the dependencies, run the following command from the
+directory containing `reproduce.py`:
 
 ```bash
-render_workspace="$(mktemp -d /tmp/randomsketch-current-render.XXXXXX)"
-mkdir "$render_workspace/input"
-ln -s "$PWD/reports/conditional-20261012/results" "$render_workspace/input/conditional"
-ln -s "$PWD/reports/expanded-risk-20261009" "$render_workspace/input/risk_curves"
-ln -s "$PWD/reports/mse-1000-20261012/results/threshold" "$render_workspace/input/threshold"
-ln -s "$PWD/reports/mse-1000-20261012/results/threshold_shapes" "$render_workspace/input/threshold_shapes"
-
-python Code_CPAL/reproduce.py render \
-  --input-root "$render_workspace/input" \
-  --output-root "$render_workspace/rendered"
+python reproduce.py run --jobs 6
 ```
 
-The temporary links give the archives the directory layout expected by
-the runner. Outputs are written beneath `$render_workspace/rendered`;
-the original records remain unchanged. To resume an archived computation,
-use its frozen generating sources and recorded package versions.
+This generates the simulated data, Figures 1–6, and Tables 1–3 using only
+the files in this folder. Results are saved under `runs/paper/` in four
+study directories: `conditional/`, `risk_curves/`, `threshold/`, and
+`threshold_shapes/`. Keep these directories, including their raw records,
+checkpoints, and metadata, to validate or render the results later.
+Figures are saved as PDF and PNG files in each study's `figures/`
+directory. The three LaTeX table fragments are saved directly in
+`runs/paper/risk_curves/`.
 
-</details>
+The initial run already creates the figures and tables. To rebuild them
+from your completed results without generating new data, optionally run:
+
+```bash
+python reproduce.py render
+```
+
+The rebuilt figures and tables are saved under `runs/rendered/`, organized
+by study. For another simulation run, choose a fresh `--output-root` as
+shown above.
